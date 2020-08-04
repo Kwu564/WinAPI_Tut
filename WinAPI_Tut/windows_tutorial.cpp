@@ -1,14 +1,38 @@
 #include <windows.h>
+#include <string>
+#include <resource.h>
+#define ID_FILE_EXIT 9001
+#define ID_STUFF_GO 9002
 
 const char g_szClassName[] = "myWindowClass";
+
+void addMenus(HWND hwnd) {
+   HMENU hMenu, hSubMenu;
+
+   hMenu = CreateMenu();
+
+   hSubMenu = CreatePopupMenu();
+   AppendMenu(hSubMenu, MF_STRING, ID_FILE_EXIT, "&Exit");
+
+   AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&File");
+
+   hSubMenu = CreatePopupMenu();
+   AppendMenu(hSubMenu, MF_STRING, ID_STUFF_GO, "&Go");
+   AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&Stuff");
+
+   SetMenu(hwnd, hMenu);
+
+
+}
 
 // Step 4: the Window Procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-
-
    switch (msg)
    {
+      case WM_CREATE:
+         addMenus(hwnd);
+         break;
       case WM_LBUTTONDOWN:
       {
          char szFileName[MAX_PATH];
@@ -18,6 +42,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
          MessageBox(hwnd, szFileName, "This program is:", MB_OK | MB_ICONINFORMATION);
       }
          break;
+      case WM_COMMAND:
+         switch (LOWORD(wParam))
+         {
+            case ID_FILE_EXIT:
+               PostMessage(hwnd, WM_CLOSE, 0, 0);
+               break;
+            case ID_STUFF_GO:
+               break;
+         }
       case WM_CLOSE:
          DestroyWindow(hwnd);
          break;
@@ -44,12 +77,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
    wc.cbClsExtra = 0;
    wc.cbWndExtra = 0;
    wc.hInstance = hInstance;
-   wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+   wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
    wc.lpszMenuName = NULL;
    wc.lpszClassName = g_szClassName;
-   wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+   wc.hIconSm = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
 
    if (!RegisterClassEx(&wc))
    {

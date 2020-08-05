@@ -1,28 +1,27 @@
 #include <windows.h>
 #include <string>
 #include <resource.h>
-#define ID_FILE_EXIT 9001
-#define ID_STUFF_GO 9002
 
 const char g_szClassName[] = "myWindowClass";
 
-void addMenus(HWND hwnd) {
-   HMENU hMenu, hSubMenu;
-
-   hMenu = CreateMenu();
-
-   hSubMenu = CreatePopupMenu();
-   AppendMenu(hSubMenu, MF_STRING, ID_FILE_EXIT, "&Exit");
-
-   AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&File");
-
-   hSubMenu = CreatePopupMenu();
-   AppendMenu(hSubMenu, MF_STRING, ID_STUFF_GO, "&Go");
-   AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hSubMenu, "&Stuff");
-
-   SetMenu(hwnd, hMenu);
-
-
+BOOL CALLBACK AboutDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+   switch (Message) {
+   case WM_INITDIALOG:
+      return TRUE;
+   case WM_COMMAND:
+      switch (LOWORD(wParam)) {
+      case IDOK:
+         EndDialog(hwnd, IDOK);
+         break;
+      case IDCANCEL:
+         EndDialog(hwnd, IDCANCEL);
+         break;
+      }
+      break;
+   default:
+      return FALSE;
+   }
+   return TRUE;
 }
 
 // Step 4: the Window Procedure
@@ -30,9 +29,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
    switch (msg)
    {
-      case WM_CREATE:
-         addMenus(hwnd);
-         break;
       case WM_LBUTTONDOWN:
       {
          char szFileName[MAX_PATH];
@@ -48,7 +44,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             case ID_FILE_EXIT:
                PostMessage(hwnd, WM_CLOSE, 0, 0);
                break;
-            case ID_STUFF_GO:
+            case ID_STUFF_ABOUT:
+               int ret = DialogBox(GetModuleHandle(NULL),
+                  MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutDlgProc);
+               if (ret == ID_OK) {
+                  MessageBox(hwnd, "Dialogue exited with IDOK.", "Notice",
+                     MB_OK | MB_ICONINFORMATION);
+               }
+               else if (ret == ID_CANCEL) {
+                  MessageBox(hwnd, "Dialog exited with IDCANEL.", "Notice",
+                     MB_OK | MB_ICONINFORMATION);
+               }
+               else if (ret == -1) {
+                  MessageBox(hwnd, "Dialog failed!", "Error",
+                     MB_OK | MB_ICONINFORMATION);
+               }
                break;
          }
       case WM_CLOSE:
@@ -77,12 +87,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
    wc.cbClsExtra = 0;
    wc.cbWndExtra = 0;
    wc.hInstance = hInstance;
-   wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
+   wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-   wc.lpszMenuName = NULL;
+   wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU);
    wc.lpszClassName = g_szClassName;
-   wc.hIconSm = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
+   wc.hIconSm = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
 
    if (!RegisterClassEx(&wc))
    {

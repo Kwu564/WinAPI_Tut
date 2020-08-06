@@ -3,6 +3,7 @@
 #include <resource.h>
 
 const char g_szClassName[] = "myWindowClass";
+HWND g_hToolbar = NULL;
 
 BOOL CALLBACK AboutDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
    switch (Message) {
@@ -24,47 +25,79 @@ BOOL CALLBACK AboutDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
    return TRUE;
 }
 
+BOOL CALLBACK ToolDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
+   switch (Message) {
+      case WM_COMMAND:
+         switch (LOWORD(wParam)) {
+            case ID_PRESS:
+               MessageBox(hwnd, "Hi!", "This is a message", MB_OK | MB_ICONEXCLAMATION);
+               break;
+            case ID_OTHER:
+               MessageBox(hwnd, "Bye!", "This is also a message", MB_OK | MB_ICONEXCLAMATION);
+               break;
+         }
+         break;
+      default:
+         return FALSE;
+   }
+   return TRUE;
+}
+
 // Step 4: the Window Procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
    switch (msg)
    {
+      case WM_CREATE:
+         g_hToolbar = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_TOOLBAR), hwnd, ToolDlgProc);
+         if (g_hToolbar != NULL) {
+            ShowWindow(g_hToolbar, SW_SHOW);
+         }
+         else {
+            MessageBox(hwnd, "CreateDialog returned NULL", "Warning!", MB_OK | MB_ICONINFORMATION);
+         }
+         break;
       case WM_LBUTTONDOWN:
       {
-         char szFileName[MAX_PATH];
-         HINSTANCE hInstance = GetModuleHandle(NULL);
+         //char szFileName[MAX_PATH];
+         //HINSTANCE hInstance = GetModuleHandle(NULL);
 
-         GetModuleFileName(hInstance, szFileName, MAX_PATH);
-         MessageBox(hwnd, szFileName, "This program is:", MB_OK | MB_ICONINFORMATION);
+         //GetModuleFileName(hInstance, szFileName, MAX_PATH);
+         //MessageBox(hwnd, szFileName, "This program is:", MB_OK | MB_ICONINFORMATION);
       }
          break;
       case WM_COMMAND:
          switch (LOWORD(wParam))
          {
+            case ID_STUFF_SHOW:
+               ShowWindow(g_hToolbar, SW_SHOW);
+               break;
+            case ID_STUFF_HIDE:
+               ShowWindow(g_hToolbar, SW_HIDE);
+               break;
             case ID_FILE_EXIT:
                PostMessage(hwnd, WM_CLOSE, 0, 0);
                break;
             case ID_STUFF_ABOUT:
                int ret = DialogBox(GetModuleHandle(NULL),
                   MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutDlgProc);
-               if (ret == ID_OK) {
-                  MessageBox(hwnd, "Dialogue exited with IDOK.", "Notice",
-                     MB_OK | MB_ICONINFORMATION);
+               if (ret == IDOK) {
+                  MessageBox(hwnd, "Dialogue exited with ID_OK.", "Notice", MB_OK | MB_ICONINFORMATION);
                }
-               else if (ret == ID_CANCEL) {
-                  MessageBox(hwnd, "Dialog exited with IDCANEL.", "Notice",
-                     MB_OK | MB_ICONINFORMATION);
+               else if (ret == IDCANCEL) {
+                  MessageBox(hwnd, "Dialog exited with ID_CANCEL.", "Notice", MB_OK | MB_ICONINFORMATION);
                }
                else if (ret == -1) {
-                  MessageBox(hwnd, "Dialog failed!", "Error",
-                     MB_OK | MB_ICONINFORMATION);
+                  MessageBox(hwnd, "Dialog failed!", "Error", MB_OK | MB_ICONINFORMATION);
                }
                break;
          }
+         break;
       case WM_CLOSE:
          DestroyWindow(hwnd);
          break;
       case WM_DESTROY:
+         DestroyWindow(g_hToolbar);
          PostQuitMessage(0);
          break;
       default:
@@ -96,8 +129,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
    if (!RegisterClassEx(&wc))
    {
-      MessageBox(NULL, "Window Registration Failed!", "Error!",
-         MB_ICONEXCLAMATION | MB_OK);
+      MessageBox(NULL, "Window Registration Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
       return 0;
    }
 
@@ -112,21 +144,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
    if (hwnd == NULL)
    {
-      MessageBox(NULL, "Window Creation Failed!", "Error!",
-         MB_ICONEXCLAMATION | MB_OK);
+      MessageBox(NULL, "Window Creation Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
       return 0;
    }
 
    ShowWindow(hwnd, nCmdShow);
    UpdateWindow(hwnd);
 
-
-
    // Step 3: The Message Loop
    while (GetMessage(&Msg, NULL, 0, 0) > 0)
    {
-      TranslateMessage(&Msg);
-      DispatchMessage(&Msg);
+      if (!IsDialogMessage(g_hToolbar, &Msg)) {
+         TranslateMessage(&Msg);
+         DispatchMessage(&Msg);
+      }
    }
+
    return Msg.wParam;
 }

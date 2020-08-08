@@ -14,6 +14,15 @@
 #define ID_STUFF_HIDE                   40010
 #define ID_PRESS                        40020
 #define ID_OTHER                        40021
+#define IDC_STATIC -1
+#define IDD_MAIN                        40022
+#define IDC_TEXT                        1000
+#define IDC_NUMBER                      1001
+#define IDC_LIST                        1002
+#define IDC_ADD                         1003
+#define IDC_CLEAR                       1004
+#define IDC_REMOVE                      1005
+#define IDC_SHOWCOUNT                   1006
 
 // Next default values for new objects
 // 
